@@ -1,14 +1,5 @@
 ---
-name: fresh-data
-description: >
-  Force live data sourcing — never cite facts, figures, prices, versions, or statistics
-  from training data without a live lookup. Use when the task requires current information:
-  benchmarks, pricing, release notes, documentation, news, availability, or any
-  time-sensitive fact. Trigger phrases: "current", "latest", "today", "real-time",
-  "up to date", "as of now", "what's the price", "which version", "what does X cost".
-  Also handles /fresh-data install to write fresh-data rules as a project default into
-  CLAUDE.md. Not for historical research where training-era data is explicitly wanted.
-user-invocable: true
+description: Toggle fresh-data rules on/off. Subcommands: status, install.
 ---
 
 # Fresh Data

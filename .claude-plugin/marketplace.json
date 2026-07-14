@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "fresh-data",
+  "description": "Force live data sourcing for AI agents. The best fact is the fact you fetched today.",
+  "owner": {
+    "name": "Max Collier",
+    "url": "https://github.com/mcwarlus"
+  },
+  "plugins": [
+    {
+      "name": "fresh-data",
+      "description": "Force live lookups for prices, versions, benchmarks, docs, news, and any time-sensitive fact.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

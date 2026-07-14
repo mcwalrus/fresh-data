@@ -1,0 +1,62 @@
+{
+  "name": "@mcwarlus/fresh-data",
+  "version": "0.1.0",
+  "description": "Force live data sourcing. Never cite facts from training data without a live lookup. Pi extension, skills.sh package, Claude Code plugin.",
+  "keywords": [
+    "fresh-data",
+    "live-data",
+    "web-search",
+    "fact-checking",
+    "pi-package",
+    "skills",
+    "claude-code-plugin"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Max Collier",
+    "url": "https://github.com/mcwarlus"
+  },
+  "homepage": "https://github.com/mcwarlus/fresh-data",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcwarlus/fresh-data.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mcwarlus/fresh-data/issues"
+  },
+  "type": "module",
+  "main": "./pi-extension/index.js",
+  "exports": {
+    ".": "./pi-extension/index.js"
+  },
+  "files": [
+    "RULES.md",
+    "SKILL.md",
+    "pi-extension/",
+    "commands/",
+    "scripts/",
+    ".claude-plugin/",
+    ".codex-plugin/",
+    ".cursor/",
+    ".windsurf/",
+    ".clinerules/",
+    ".qoder/",
+    ".kiro/",
+    ".devin-plugin/",
+    ".opencode/",
+    ".openclaw/",
+    "opencode.json",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test pi-extension/test/*.test.js scripts/test-check-rule-copies.test.js",
+    "check-rules": "node scripts/check-rule-copies.js"
+  },
+  "pi": {
+    "extensions": ["./pi-extension/index.js"],
+    "skills": ["./skills"]
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

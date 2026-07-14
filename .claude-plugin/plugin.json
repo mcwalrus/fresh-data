@@ -1,0 +1,9 @@
+{
+  "name": "fresh-data",
+  "version": "0.1.0",
+  "description": "Force live data sourcing. Never cite training-era facts without a live lookup.",
+  "author": {
+    "name": "Max Collier",
+    "url": "https://github.com/mcwarlus"
+  }
+}

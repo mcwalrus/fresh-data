@@ -6,9 +6,7 @@ description: >
   benchmarks, pricing, release notes, documentation, news, availability, or any
   time-sensitive fact. Trigger phrases: "current", "latest", "today", "real-time",
   "up to date", "as of now", "what's the price", "which version", "what does X cost".
-  Also handles /fresh-data install to write fresh-data rules as a project default into
-  CLAUDE.md. Not for historical research where training-era data is explicitly wanted.
-user-invocable: true
+  Not for historical research where training-era data is explicitly wanted.
 ---
 
 # Fresh Data
