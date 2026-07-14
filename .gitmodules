@@ -1,0 +1,6 @@
+[submodule "mattpocock/skills"]
+	path = mattpocock/skills
+	url = https://github.com/mattpocock/skills.git
+[submodule "ponytail"]
+	path = ponytail
+	url = https://github.com/DietrichGebert/ponytail.git
