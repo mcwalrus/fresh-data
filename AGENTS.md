@@ -6,6 +6,48 @@ The extension should be able to turn on or off through the harnesses. The skill 
 
 The idea is that this should be visible from my harness.
 
+## Local Development
+
+The package ships as a pi extension, a per-harness skill set, and (eventually) an npm package. The fastest iteration loop uses pi's local-path install — it loads the package directly from the working repo on every session, so edits are live without re-tagging or re-pushing.
+
+**Setup (one-time):**
+
+```bash
+pi install -l "$(pwd)"
+```
+
+Run from the repo root. This adds `".."` to `.pi/settings.json`. `pi list` will show the local path resolving to the repo root. Subsequent `pi` sessions load the extension, commands, and skills straight from the working tree — no cache to manage, no clone to reconcile.
+
+**Iteration loop:**
+
+1. Edit files in the working repo (`pi-extension/`, `SKILL.md`, `RULES.md`, wrappers under `.cursor/`, `.clinerules/`, etc.).
+2. If you touched `RULES.md`, run `node scripts/sync-rule-copies.js` so the per-harness wrappers stay in sync (verified by `node scripts/check-rule-copies.js`).
+3. Start a new `pi` session — changes are picked up automatically.
+
+**Sub-second feedback on pure helpers (no pi session needed):**
+
+```bash
+cd pi-extension && npm test
+```
+
+Runs `node --test` against `command-parser.js`, `session.js`, `install.js`, and the extension harness. ~65ms for 45 tests. Use this for parser/rule/logic changes; reach for a full `pi` session only when testing the lifecycle hooks (`session_start`, `agent_start`, `before_agent_start`, `input`) or the status indicator.
+
+**Verifying a published release:**
+
+Switch to a tag-pinned git install to confirm the world sees what you shipped:
+
+```bash
+pi install -l git:git@github.com:mcwalrus/fresh-data@vX.Y.Z
+```
+
+The local-path and tag-pinned installs coexist cleanly in `settings.json`; remove one before adding the other if you only want a single source.
+
+**Anti-patterns to avoid:**
+
+- Editing files inside `.pi/git/github.com/mcwalrus/fresh-data/` directly. That cache is reconciled on `pi update` / `pi install` — edits get wiped.
+- Re-tagging for every iteration. Tags are for releases; the local-path install exists precisely so dev work doesn't need them.
+- Committing `.pi/settings.json` unless the change is genuinely shared (e.g. switching the pinned package source for a team).
+
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:6cd5cc61 -->
 ## Beads Issue Tracker
 
