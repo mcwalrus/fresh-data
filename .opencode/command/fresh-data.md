@@ -4,7 +4,21 @@ description: Toggle fresh-data rules on/off. Subcommands: status, install.
 
 # Fresh Data
 
-Live lookup is the only valid source for factual claims when this skill is active.
+AI models can default to their knowledge relative to it's training data. This can be for key information related to problem solving which can draw to the wrong analysis or problems. This skill, or AI-model harness extension aims to enforce the process of fetching the most up-to-date, revelant data available when applicable.
+
+## How it works
+
+Before citing key facts, the agent stops at the first rung that holds:
+
+```
+1. Does this claim age?         → no: cite from training (math, history, ideas)
+2. What time is it?             → `date` for knowing the "retrieved today"
+3. Primary source exists?       → fetch it (vendor docs, changelogs, registries)
+4. Is the URL authoritative?    → state it; unfamiliar → click through to vendor homepage
+5. If passes:                   → quote with URL and retrieval timestamp
+```
+
+Otherwise, if sources aren't authoritative or can't be fetched fresh data will state this that information couldn't be found.
 
 ## Rules
 
@@ -20,29 +34,26 @@ Live lookup is the only valid source for factual claims when this skill is activ
 
 **If you cannot fetch:** say so explicitly. Do not silently substitute training data.
 
-## How it works
-
-Before citing a fact, the agent stops at the first rung that holds:
-
-1. **Does this claim age?** No → cite from training (math, history, ideas).
-2. **What time is it?** `date` (or harness date) — you need this before claiming "retrieved today".
-3. **Primary source exists?** Fetch it (vendor docs, changelogs, registries).
-4. **URL is authoritative?** State it; unfamiliar → click through to vendor homepage.
-5. **Only then:** quote with URL + retrieval timestamp.
-
-The sections below are the reference material for each rung.
-
 ## When Recent Data Does NOT Matter
 
 Live lookup is overkill for claims where training-era data is fine:
 
 - **Historical events with fixed dates** — e.g. "When did WWII end?"
-- **Blog posts, opinion pieces, essays** — when the user wants the *idea* or *argument*, not a specific factual claim that the post hinges on
-- **Discovering new opinions or perspectives** — when the recency of the *view* does not matter; training-era text is fine
 - **Mathematical or logical facts** — pure math, formal logic, well-established identities
 - **Foundational concepts that do not evolve** — e.g. what TCP/IP is, what a hash function does
+- **Blog posts, opinion pieces, essays** — when you want the *idea* or *argument*, not a specific factual claim that the post hinges on
+- **Discovering new opinions or perspectives** — when the recency of the *view* doesn't matter; historic articles are fine
 
 The skill still applies when a blog post makes a *time-sensitive* factual claim (e.g. "the latest React version is..."). The question is whether the claim *ages*, not where it appears.
+
+## Key examples
+
+* Using `debian-12` instead of `debian-13`.
+* Fetching previous version of dependencies.
+* Quoting an API endpoint URL that's since been deprecated or moved.
+* Citing an old default version of a framework (Next.js, React, Python, Node).
+* Naming a CVE or security advisory that has since been patched or superseded.
+* Using a deprecated CLI flag (e.g. old `kubectl` / `docker` / `gh` syntax).
 
 ## Finding the Local Time
 
@@ -110,7 +121,5 @@ This skill is per-session and can be turned off when live-data discipline gets i
 - **Verbal toggles:** `stop fresh-data`, `normal mode`
 - **Footer indicator:** `● 📡 fresh-data: ACTIVE` vs `○ 📡 fresh-data: OFF`
 - **Default:** fresh sessions start **on** in the pi harness after install. If you turn it off in a session, that off state persists for that session and is restored on `/resume` and `/new`.
-
-See `README.md` for the full install matrix per harness.
 
 See `README.md` for the full install matrix per harness.
