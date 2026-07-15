@@ -29,6 +29,18 @@ Live lookup is the only valid source for factual claims when this skill is activ
 
 **If you cannot fetch:** say so explicitly. Do not silently substitute training data.
 
+## How it works
+
+Before citing a fact, the agent stops at the first rung that holds:
+
+1. **Does this claim age?** No → cite from training (math, history, ideas).
+2. **What time is it?** `date` (or harness date) — you need this before claiming "retrieved today".
+3. **Primary source exists?** Fetch it (vendor docs, changelogs, registries).
+4. **URL is authoritative?** State it; unfamiliar → click through to vendor homepage.
+5. **Only then:** quote with URL + retrieval timestamp.
+
+The sections below are the reference material for each rung.
+
 ## When Recent Data Does NOT Matter
 
 Live lookup is overkill for claims where training-era data is fine:
@@ -40,6 +52,17 @@ Live lookup is overkill for claims where training-era data is fine:
 - **Foundational concepts that do not evolve** — e.g. what TCP/IP is, what a hash function does
 
 The skill still applies when a blog post makes a *time-sensitive* factual claim (e.g. "the latest React version is..."). The question is whether the claim *ages*, not where it appears.
+
+## Finding the Local Time
+
+"Retrieved today" requires knowing what *today* is in the user's timezone. Pick one and include it in the citation:
+
+- **POSIX (macOS / Linux):** `date +"%Y-%m-%dT%H:%M:%S%z"`
+- **UTC (any POSIX):** `date -u +"%Y-%m-%dT%H:%M:%SZ"`
+- **Windows PowerShell:** `Get-Date -Format "o"` or `Get-Date -AsUTC`
+- **Harness context:** most agents inject today's date as context — check before shelling out
+
+When citing a fetched URL, append the date string you got from one of the above so the user can see *when* "today" was for you.
 
 ## Authoritative Sources
 
@@ -53,28 +76,6 @@ When you do fetch, prefer primary sources:
 - **Conference proceedings and academic publishers** — for peer-reviewed claims
 
 Avoid SEO content farms, article-spinning sites, and any URL whose domain is not the source's own. If a URL looks plausible but unfamiliar, click through the vendor's homepage and find the link from there.
-
-## Toggling On / Off
-
-This skill is per-session and can be turned off when live-data discipline gets in the way:
-
-- **Slash commands:** `/fresh-data`, `/fresh-data status`, `/fresh-data install`
-- **Verbal toggles:** `stop fresh-data`, `normal mode`
-- **Footer indicator:** `● 📡 fresh-data: ACTIVE` vs `○ 📡 fresh-data: OFF`
-- **Project-scoped rules:** `/fresh-data install` writes the rules into `CLAUDE.md` so they apply even when the skill itself is off
-
-See `README.md` for the full install matrix per harness.
-
-## Finding the Local Time
-
-"Retrieved today" requires knowing what *today* is in the user's timezone. Pick one and include it in the citation:
-
-- **POSIX (macOS / Linux):** `date +"%Y-%m-%dT%H:%M:%S%z"`
-- **UTC (any POSIX):** `date -u +"%Y-%m-%dT%H:%M:%SZ"`
-- **Windows PowerShell:** `Get-Date -Format "o"` or `Get-Date -AsUTC`
-- **Harness context:** most agents inject today's date as context — check before shelling out
-
-When citing a fetched URL, append the date string you got from one of the above so the user can see *when* "today" was for you.
 
 ## Latest Dependency Versions
 
@@ -104,3 +105,14 @@ When the question is "what's the newest content on this site?":
 - **Search-engine recency filter as a fallback:** `site:example.com` after:`YYYY-MM-DD` returns pages indexed after that date (works in Google, Brave, DuckDuckGo).
 
 When citing from any of these, state the URL *and* the `<lastmod>` / `<pubDate>` value you saw — not just "today".
+
+## Toggling On / Off
+
+This skill is per-session and can be turned off when live-data discipline gets in the way:
+
+- **Slash commands:** `/fresh-data`, `/fresh-data status`, `/fresh-data install`
+- **Verbal toggles:** `stop fresh-data`, `normal mode`
+- **Footer indicator:** `● 📡 fresh-data: ACTIVE` vs `○ 📡 fresh-data: OFF`
+- **Project-scoped rules:** `/fresh-data install` writes the rules into `CLAUDE.md` so they apply even when the skill itself is off
+
+See `README.md` for the full install matrix per harness.
