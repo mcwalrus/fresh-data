@@ -57,8 +57,6 @@ test("extension registers /fresh-data commands", () => {
 test("extension subscribes to required lifecycle events", () => {
   const { events } = createPiHarness();
   assert.ok(events.has("session_start"));
-  assert.ok(events.has("agent_start"));
-  assert.ok(events.has("agent_end"));
   assert.ok(events.has("before_agent_start"));
   assert.ok(events.has("input"));
 });
@@ -251,7 +249,7 @@ test("extension-injected input is ignored for deactivation", async () => withTem
   assert.equal(appendedEntries.length, before, "extension-source input must not deactivate");
 }));
 
-test("status indicator renders OFF when not active, ACTIVE when agent is running", async () => withTempCwd(async (cwd) => {
+test("status indicator renders ACTIVE when mode is on, independent of agent activity", async () => withTempCwd(async (cwd) => {
   const { events } = createPiHarness();
   const statusWrites = [];
   const ctx = createCommandContext({
@@ -261,13 +259,28 @@ test("status indicator renders OFF when not active, ACTIVE when agent is running
   });
 
   await events.get("session_start")({ reason: "resume" }, ctx);
-  await events.get("agent_start")({}, ctx);
 
   // The last write should be the ACTIVE indicator
   const last = statusWrites.at(-1);
   assert.equal(last.key, "fresh-data");
   assert.match(last.text, /●/);
   assert.match(last.text, /ACTIVE|ON/i);
+}));
+
+test("status indicator clears when mode is off", async () => withTempCwd(async (cwd) => {
+  const { events } = createPiHarness();
+  const statusWrites = [];
+  const ctx = createCommandContext({
+    cwd,
+    sessionManager: { getEntries: () => [{ type: "custom", customType: "fresh-data-mode", data: { active: false } }] },
+    ui: { notify() {}, setStatus: (key, text) => statusWrites.push({ key, text }), theme: { fg: (_c, t) => t } },
+  });
+
+  await events.get("session_start")({ reason: "resume" }, ctx);
+
+  const last = statusWrites.at(-1);
+  assert.equal(last.key, "fresh-data");
+  assert.equal(last.text, "");
 }));
 
 test("status indicator stays silent when ui lacks a theme", async () => withTempCwd(async (cwd) => {
@@ -280,7 +293,6 @@ test("status indicator stays silent when ui lacks a theme", async () => withTemp
   });
 
   await events.get("session_start")({ reason: "resume" }, ctx);
-  await events.get("agent_start")({}, ctx);
 
   assert.deepEqual(calls, []);
 }));
@@ -360,4 +372,131 @@ test("/fresh-data on / off are aliases for enable / disable", async () => withTe
 
   await commands.get("fresh-data").handler("off", ctx);
   assert.deepEqual(appendedEntries.at(-1).data, { active: false });
+}));
+
+test("/fresh-data status reports OFF when current mode is off", async () => withTempCwd(async (cwd) => {
+  const { commands, events } = createPiHarness();
+  const notifications = [];
+  const ctx = createCommandContext({
+    cwd,
+    sessionManager: { getEntries: () => [{ type: "custom", customType: "fresh-data-mode", data: { active: false } }] },
+    ui: { notify: (msg) => notifications.push(msg) },
+  });
+
+  await events.get("session_start")({ reason: "resume" }, ctx);
+  await commands.get("fresh-data").handler("status", ctx);
+
+  assert.match(notifications.at(-1), /fresh-data/i);
+  assert.match(notifications.at(-1), /OFF/i);
+}));
+
+test("/fresh-data with unknown subcommand emits a warning notification", async () => withTempCwd(async (cwd) => {
+  const { commands, events } = createPiHarness();
+  const notifications = [];
+  const ctx = createCommandContext({
+    cwd,
+    ui: { notify: (msg, level) => notifications.push({ msg, level }) },
+  });
+
+  await events.get("session_start")({ reason: "startup" }, ctx);
+  await commands.get("fresh-data").handler("frobnicate", ctx);
+
+  const last = notifications.at(-1);
+  assert.equal(last.level, "warning");
+  assert.match(last.msg, /fresh-data/i);
+  assert.match(last.msg, /unknown-command:frobnicate/);
+}));
+
+test("session_start prefers getBranch over getEntries when both are available", async () => withTempCwd(async (cwd) => {
+  const { events } = createPiHarness();
+  // getBranch returns active, getEntries returns inactive — branch should win.
+  const ctx = createCommandContext({
+    cwd,
+    sessionManager: {
+      getBranch: () => [{ type: "custom", customType: "fresh-data-mode", data: { active: true } }],
+      getEntries: () => [{ type: "custom", customType: "fresh-data-mode", data: { active: false } }],
+    },
+  });
+
+  await events.get("session_start")({ reason: "resume" }, ctx);
+  const result = await events.get("before_agent_start")({ systemPrompt: "BASE" }, ctx);
+
+  assert.ok(result.systemPrompt.includes("Fresh Data"));
+}));
+
+test("session_start restores OFF mode from persisted entries", async () => withTempCwd(async (cwd) => {
+  const { events } = createPiHarness();
+  const ctx = createCommandContext({
+    cwd,
+    sessionManager: {
+      getEntries: () => [{ type: "custom", customType: "fresh-data-mode", data: { active: false } }],
+    },
+  });
+
+  await events.get("session_start")({ reason: "resume" }, ctx);
+  const result = await events.get("before_agent_start")({ systemPrompt: "BASE" }, ctx);
+
+  assert.equal(result, undefined);
+}));
+
+test("/fresh-data install failure surfaces an error notification", async () => withTempCwd(async (cwd) => {
+  const { commands, events } = createPiHarness();
+  const notifications = [];
+  const ctx = createCommandContext({
+    cwd,
+    ui: { notify: (msg, level) => notifications.push({ msg, level }) },
+  });
+
+  await events.get("session_start")({ reason: "startup" }, ctx);
+
+  // Make CLAUDE.md a directory so existsSync is true but readFileSync throws.
+  const { mkdirSync } = await import("node:fs");
+  mkdirSync(join(cwd, "CLAUDE.md"));
+
+  await commands.get("fresh-data").handler("install", ctx);
+
+  const last = notifications.at(-1);
+  assert.equal(last.level, "error");
+  assert.match(last.msg, /fresh-data install failed:/);
+}));
+
+test("input with missing source still processes deactivation", async () => withTempCwd(async (cwd) => {
+  const { events, appendedEntries } = createPiHarness();
+  const ctx = createCommandContext({ cwd });
+
+  await events.get("session_start")({ reason: "startup" }, ctx);
+  appendedEntries.length = 0;
+
+  await events.get("input")({ text: "stop fresh-data" }, ctx);
+  assert.equal(appendedEntries.at(-1).data.active, false);
+}));
+
+test("input with unknown source still processes deactivation", async () => withTempCwd(async (cwd) => {
+  const { events, appendedEntries } = createPiHarness();
+  const ctx = createCommandContext({ cwd });
+
+  await events.get("session_start")({ reason: "startup" }, ctx);
+  appendedEntries.length = 0;
+
+  await events.get("input")({ text: "stop fresh-data", source: "command" }, ctx);
+  assert.equal(appendedEntries.at(-1).data.active, false);
+}));
+
+test("status indicator stays silent when theme proxy throws on access", async () => withTempCwd(async (cwd) => {
+  const { events } = createPiHarness();
+  const statusWrites = [];
+  const ctx = createCommandContext({
+    cwd,
+    sessionManager: { getEntries: () => [{ type: "custom", customType: "fresh-data-mode", data: { active: true } }] },
+    ui: {
+      notify() {},
+      setStatus: (key, text) => statusWrites.push({ key, text }),
+      get theme() { throw new Error("theme not initialised"); },
+    },
+  });
+
+  // Must not throw even though c.ui.theme throws on read.
+  await events.get("session_start")({ reason: "resume" }, ctx);
+
+  assert.deepEqual(statusWrites, []);
 }));

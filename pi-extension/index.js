@@ -38,7 +38,6 @@ function buildRulesBlock() {
 
 export default function freshDataExtension(pi) {
   let currentMode = "off";
-  let isAgentActive = false;
   let lastCtx = null;
 
   function syncStatus(ctx) {
@@ -48,12 +47,11 @@ export default function freshDataExtension(pi) {
     // a half-loaded theme doesn't crash the session.
     let theme;
     try { theme = c.ui.theme; if (!theme?.fg) return; } catch { return; }
-    const text = formatStatusText(theme, currentMode === "on" && isAgentActive);
     if (currentMode === "off") {
       c.ui.setStatus(STATUS_KEY, "");
       return;
     }
-    c.ui.setStatus(STATUS_KEY, text);
+    c.ui.setStatus(STATUS_KEY, formatStatusText(theme, true));
   }
 
   function persistMode(active, ctx) {
@@ -138,17 +136,6 @@ export default function freshDataExtension(pi) {
     lastCtx = ctx;
     const entries = ctx?.sessionManager?.getBranch?.() || ctx?.sessionManager?.getEntries?.() || [];
     currentMode = resolveSessionMode(entries, "on");
-    isAgentActive = false;
-    syncStatus(ctx);
-  });
-
-  pi.on("agent_start", async (_event, ctx) => {
-    isAgentActive = true;
-    syncStatus(ctx);
-  });
-
-  pi.on("agent_end", async (_event, ctx) => {
-    isAgentActive = false;
     syncStatus(ctx);
   });
 
