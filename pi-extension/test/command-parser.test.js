@@ -22,6 +22,20 @@ test("parseFreshDataCommand install keyword", () => {
   assert.deepEqual(parseFreshDataCommand("INSTALL"), { type: "install" });
 });
 
+test("parseFreshDataCommand on/enable keywords", () => {
+  assert.deepEqual(parseFreshDataCommand("on"), { type: "enable" });
+  assert.deepEqual(parseFreshDataCommand("enable"), { type: "enable" });
+  assert.deepEqual(parseFreshDataCommand("ON"), { type: "enable" });
+  assert.deepEqual(parseFreshDataCommand("Enable"), { type: "enable" });
+});
+
+test("parseFreshDataCommand off/disable keywords", () => {
+  assert.deepEqual(parseFreshDataCommand("off"), { type: "disable" });
+  assert.deepEqual(parseFreshDataCommand("disable"), { type: "disable" });
+  assert.deepEqual(parseFreshDataCommand("OFF"), { type: "disable" });
+  assert.deepEqual(parseFreshDataCommand("Disable"), { type: "disable" });
+});
+
 test("parseFreshDataCommand garbage returns invalid", () => {
   const result = parseFreshDataCommand("frobnicate");
   assert.equal(result.type, "invalid");

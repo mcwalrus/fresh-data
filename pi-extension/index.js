@@ -69,7 +69,7 @@ export default function freshDataExtension(pi) {
   }
 
   pi.registerCommand("fresh-data", {
-    description: "Toggle fresh-data rules on/off. Subcommands: status, install.",
+    description: "Toggle fresh-data rules. Subcommands: on, off, enable, disable, status, install.",
     handler: async (args, ctx) => {
       const parsed = parseFreshDataCommand(args);
 
@@ -104,6 +104,24 @@ export default function freshDataExtension(pi) {
         return;
       }
 
+      if (parsed.type === "enable" || parsed.type === "disable") {
+        const wantActive = parsed.type === "enable";
+        if (wantActive && currentMode === "on") {
+          ctx?.ui?.notify?.("fresh-data: already ACTIVE", "info");
+          return;
+        }
+        if (!wantActive && currentMode === "off") {
+          ctx?.ui?.notify?.("fresh-data: already OFF", "info");
+          return;
+        }
+        persistMode(wantActive, ctx);
+        ctx?.ui?.notify?.(
+          wantActive ? "fresh-data: ACTIVE (rules will be injected)" : "fresh-data: OFF",
+          "info",
+        );
+        return;
+      }
+
       ctx?.ui?.notify?.(`fresh-data: ${parsed.reason || "unknown command"}`, "warning");
     },
   });
@@ -119,7 +137,7 @@ export default function freshDataExtension(pi) {
   pi.on("session_start", async (_event, ctx) => {
     lastCtx = ctx;
     const entries = ctx?.sessionManager?.getBranch?.() || ctx?.sessionManager?.getEntries?.() || [];
-    currentMode = resolveSessionMode(entries, "off");
+    currentMode = resolveSessionMode(entries, "on");
     isAgentActive = false;
     syncStatus(ctx);
   });

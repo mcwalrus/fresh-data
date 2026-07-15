@@ -51,9 +51,15 @@ Git install until the npm package ships; once published this becomes `pi install
 
 Once installed:
 
-- **Slash commands:** `/fresh-data`, `/fresh-data status`, `/fresh-data install`
+- **Slash commands:**
+  - `/fresh-data` — toggle the rules on/off
+  - `/fresh-data on` or `/fresh-data enable` — explicitly turn the rules on
+  - `/fresh-data off` or `/fresh-data disable` — explicitly turn the rules off
+  - `/fresh-data status` — report current state
+  - `/fresh-data install` — write the rules into `CLAUDE.md` so they apply even when the skill is off
 - **Verbal toggle:** type `stop fresh-data` or `normal mode` to turn the rules off
 - **Footer indicator:** `● 📡 fresh-data: ACTIVE` vs `○ 📡 fresh-data: OFF`
+- **Default:** fresh sessions start **on** after install; turning it off in a session persists across `/resume` and `/new`.
 
 ### Claude Code / skills.sh
 

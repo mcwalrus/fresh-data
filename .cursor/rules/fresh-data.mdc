@@ -103,9 +103,16 @@ When citing from any of these, state the URL *and* the `<lastmod>` / `<pubDate>`
 
 This skill is per-session and can be turned off when live-data discipline gets in the way:
 
-- **Slash commands:** `/fresh-data`, `/fresh-data status`, `/fresh-data install`
+- **Slash commands:**
+  - `/fresh-data` — toggle the rules on/off
+  - `/fresh-data on` or `/fresh-data enable` — explicitly turn the rules on (no-op if already on)
+  - `/fresh-data off` or `/fresh-data disable` — explicitly turn the rules off (no-op if already off)
+  - `/fresh-data status` — report the current state
+  - `/fresh-data install` — write the rules into the project's `CLAUDE.md` so they apply even when the skill itself is off
 - **Verbal toggles:** `stop fresh-data`, `normal mode`
 - **Footer indicator:** `● 📡 fresh-data: ACTIVE` vs `○ 📡 fresh-data: OFF`
-- **Project-scoped rules:** `/fresh-data install` writes the rules into `CLAUDE.md` so they apply even when the skill itself is off
+- **Default:** fresh sessions start **on** in the pi harness after install. If you turn it off in a session, that off state persists for that session and is restored on `/resume` and `/new`.
+
+See `README.md` for the full install matrix per harness.
 
 See `README.md` for the full install matrix per harness.

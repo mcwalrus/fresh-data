@@ -65,7 +65,10 @@ test("extension subscribes to required lifecycle events", () => {
 
 test("/fresh-data with no args toggles to active and persists entry", async () => withTempCwd(async (cwd) => {
   const { commands, events, appendedEntries } = createPiHarness();
-  const ctx = createCommandContext({ cwd });
+  const ctx = createCommandContext({
+    cwd,
+    sessionManager: { getEntries: () => [{ type: "custom", customType: "fresh-data-mode", data: { active: false } }] },
+  });
 
   await events.get("session_start")({ reason: "startup" }, ctx);
   appendedEntries.length = 0; // clear entries from session_start
@@ -78,7 +81,10 @@ test("/fresh-data with no args toggles to active and persists entry", async () =
 
 test("/fresh-data toggles off when already active", async () => withTempCwd(async (cwd) => {
   const { commands, events, appendedEntries } = createPiHarness();
-  const ctx = createCommandContext({ cwd });
+  const ctx = createCommandContext({
+    cwd,
+    sessionManager: { getEntries: () => [{ type: "custom", customType: "fresh-data-mode", data: { active: false } }] },
+  });
 
   await events.get("session_start")({ reason: "startup" }, ctx);
   appendedEntries.length = 0;
@@ -99,7 +105,6 @@ test("/fresh-data status reports current mode", async () => withTempCwd(async (c
   });
 
   await events.get("session_start")({ reason: "startup" }, ctx);
-  await commands.get("fresh-data").handler("", ctx); // on
   await commands.get("fresh-data").handler("status", ctx);
 
   const lastStatus = notifications.at(-1);
@@ -163,26 +168,39 @@ test("session_start restores active mode from persisted entries", async () => wi
 
 test("before_agent_start injects rules when active, no-ops when off", async () => withTempCwd(async (cwd) => {
   const { events, commands } = createPiHarness();
-  const ctx = createCommandContext({ cwd });
+  const ctx = createCommandContext({
+    cwd,
+    sessionManager: { getEntries: () => [{ type: "custom", customType: "fresh-data-mode", data: { active: false } }] },
+  });
 
   await events.get("session_start")({ reason: "startup" }, ctx);
 
-  // Default: off (no rules injected)
+  // After explicit off: no rules injected
   const offResult = await events.get("before_agent_start")({ systemPrompt: "BASE" }, ctx);
   assert.equal(offResult, undefined);
 
-  // After toggle: rules injected
+  // After toggle on: rules injected
   await commands.get("fresh-data").handler("", ctx);
   const onResult = await events.get("before_agent_start")({ systemPrompt: "BASE" }, ctx);
   assert.ok(onResult.systemPrompt.includes("Fresh Data"));
 }));
 
-test("before_agent_start guards missing event and missing systemPrompt", async () => withTempCwd(async (cwd) => {
-  const { events, commands } = createPiHarness();
+test("before_agent_start defaults to on after install when no prior entry exists", async () => withTempCwd(async (cwd) => {
+  const { events } = createPiHarness();
   const ctx = createCommandContext({ cwd });
 
   await events.get("session_start")({ reason: "startup" }, ctx);
-  await commands.get("fresh-data").handler("", ctx);
+
+  // Fresh session with no prior fresh-data-mode entry -> default on -> rules injected.
+  const onResult = await events.get("before_agent_start")({ systemPrompt: "BASE" }, ctx);
+  assert.ok(onResult?.systemPrompt.includes("Fresh Data"));
+}));
+
+test("before_agent_start guards missing event and missing systemPrompt", async () => withTempCwd(async (cwd) => {
+  const { events } = createPiHarness();
+  const ctx = createCommandContext({ cwd });
+
+  await events.get("session_start")({ reason: "startup" }, ctx);
 
   // null/undefined event must not crash
   for (const bad of [undefined, null]) {
@@ -198,25 +216,21 @@ test("before_agent_start guards missing event and missing systemPrompt", async (
 }));
 
 test("deactivation phrase in input toggles off", async () => withTempCwd(async (cwd) => {
-  const { commands, events, appendedEntries } = createPiHarness();
+  const { events, appendedEntries } = createPiHarness();
   const ctx = createCommandContext({ cwd });
 
   await events.get("session_start")({ reason: "startup" }, ctx);
   appendedEntries.length = 0;
-
-  await commands.get("fresh-data").handler("", ctx); // on
-  assert.equal(appendedEntries.at(-1).data.active, true);
 
   await events.get("input")({ text: "stop fresh-data", source: "interactive" }, ctx);
   assert.equal(appendedEntries.at(-1).data.active, false);
 }));
 
 test("a request mentioning 'normal mode' as a phrase stays active", async () => withTempCwd(async (cwd) => {
-  const { commands, events } = createPiHarness();
+  const { events } = createPiHarness();
   const ctx = createCommandContext({ cwd });
 
   await events.get("session_start")({ reason: "startup" }, ctx);
-  await commands.get("fresh-data").handler("", ctx); // on
 
   await events.get("input")({ text: "add a normal mode toggle next to dark mode", source: "interactive" }, ctx);
   const result = await events.get("before_agent_start")({ systemPrompt: "BASE" }, ctx);
@@ -269,4 +283,81 @@ test("status indicator stays silent when ui lacks a theme", async () => withTemp
   await events.get("agent_start")({}, ctx);
 
   assert.deepEqual(calls, []);
+}));
+
+test("/fresh-data enable activates when off", async () => withTempCwd(async (cwd) => {
+  const { commands, events, appendedEntries } = createPiHarness();
+  const ctx = createCommandContext({
+    cwd,
+    sessionManager: { getEntries: () => [{ type: "custom", customType: "fresh-data-mode", data: { active: false } }] },
+  });
+
+  await events.get("session_start")({ reason: "startup" }, ctx);
+  appendedEntries.length = 0;
+
+  await commands.get("fresh-data").handler("enable", ctx);
+  const last = appendedEntries.at(-1);
+  assert.deepEqual(last, { customType: "fresh-data-mode", data: { active: true } });
+}));
+
+test("/fresh-data disable deactivates when on", async () => withTempCwd(async (cwd) => {
+  const { commands, events, appendedEntries } = createPiHarness();
+  const ctx = createCommandContext({ cwd });
+
+  await events.get("session_start")({ reason: "startup" }, ctx);
+  appendedEntries.length = 0;
+
+  await commands.get("fresh-data").handler("disable", ctx);
+  const last = appendedEntries.at(-1);
+  assert.deepEqual(last, { customType: "fresh-data-mode", data: { active: false } });
+}));
+
+test("/fresh-data enable is idempotent when already on", async () => withTempCwd(async (cwd) => {
+  const { commands, events, appendedEntries } = createPiHarness();
+  const notifications = [];
+  const ctx = createCommandContext({
+    cwd,
+    ui: { notify: (msg) => notifications.push(msg) },
+  });
+
+  await events.get("session_start")({ reason: "startup" }, ctx);
+  appendedEntries.length = 0;
+
+  await commands.get("fresh-data").handler("enable", ctx);
+  assert.equal(appendedEntries.length, 0);
+  assert.match(notifications.at(-1), /already ACTIVE/i);
+}));
+
+test("/fresh-data disable is idempotent when already off", async () => withTempCwd(async (cwd) => {
+  const { commands, events, appendedEntries } = createPiHarness();
+  const notifications = [];
+  const ctx = createCommandContext({
+    cwd,
+    sessionManager: { getEntries: () => [{ type: "custom", customType: "fresh-data-mode", data: { active: false } }] },
+    ui: { notify: (msg) => notifications.push(msg) },
+  });
+
+  await events.get("session_start")({ reason: "startup" }, ctx);
+  appendedEntries.length = 0;
+
+  await commands.get("fresh-data").handler("disable", ctx);
+  assert.equal(appendedEntries.length, 0);
+  assert.match(notifications.at(-1), /already OFF/i);
+}));
+
+test("/fresh-data on / off are aliases for enable / disable", async () => withTempCwd(async (cwd) => {
+  const { commands, events, appendedEntries } = createPiHarness();
+  const ctx = createCommandContext({
+    cwd,
+    sessionManager: { getEntries: () => [{ type: "custom", customType: "fresh-data-mode", data: { active: false } }] },
+  });
+
+  await events.get("session_start")({ reason: "startup" }, ctx);
+  appendedEntries.length = 0;
+
+  await commands.get("fresh-data").handler("on", ctx);
+  assert.deepEqual(appendedEntries.at(-1).data, { active: true });
+
+  await commands.get("fresh-data").handler("off", ctx);
+  assert.deepEqual(appendedEntries.at(-1).data, { active: false });
 }));

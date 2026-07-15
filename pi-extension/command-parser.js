@@ -9,6 +9,8 @@ export function parseFreshDataCommand(text) {
 
   if (primary === "status") return { type: "status" };
   if (primary === "install") return { type: "install" };
+  if (primary === "on" || primary === "enable") return { type: "enable" };
+  if (primary === "off" || primary === "disable") return { type: "disable" };
 
   return { type: "invalid", reason: `unknown-command:${primary || ""}` };
 }
