@@ -60,7 +60,7 @@ const INVARIANTS = [
   "Always fetch before citing",
   "Fetch procedure",
   "If you cannot fetch",
-  "What Does Not Need a Live Lookup",
+  "When Recent Data Does NOT Matter",
   "Prices, costs, API rates",
   "Documentation (APIs evolve",
   "Mathematical or logical facts",

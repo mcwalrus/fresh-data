@@ -1,6 +1,8 @@
 The file SKILL.md was prevously a SKILL
 
-I want to turn this into a pi extension as well as a npx skills@latest add mcwarlus/fresh-data like ponytail.
+I want to turn this into a pi extension as well as a npx skills@latest add mcwarlus/fresh-data like ponytail. Extend @SKILL.md to capture cases where not to apply the skill, refer to authorative sources, consider when recent data doesn't matter like historical events, blog articles and discovering new opinions. 
+
+The extension should be able to turn on or off through the harnesses. The skill should also provide techniques to find what the local time is using CLI / tools, or context available. Additionally latest versions for dependencies should be refered to for the context of software engineering, with reference to sitemap.xml for websites to figure out what articles are most recently added.
 
 The idea is that this should be visible from my harness.
 
