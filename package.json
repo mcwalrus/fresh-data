@@ -1,6 +1,6 @@
 {
   "name": "@mcwarlus/fresh-data",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0",
   "description": "Force live data sourcing. Never cite facts from training data without a live lookup. Pi extension, skills.sh package, Claude Code plugin.",
   "keywords": [
     "fresh-data",
@@ -57,8 +57,12 @@
     "node": ">=20"
   },
   "pi": {
-    "extensions": ["./pi-extension/index.js"],
-    "skills": ["./skills"]
+    "extensions": [
+      "./pi-extension/index.js"
+    ],
+    "skills": [
+      "./skills"
+    ]
   },
   "publishConfig": {
     "access": "public"
