@@ -39,15 +39,49 @@ Fresh data will ignore claims where training-era data is fine:
 * Naming a CVE or security advisory that has since been patched or superseded.
 * Using a deprecated CLI flag (e.g. old `kubectl` / `docker` / `gh` syntax).
 
+## Worked examples
+
+**Check the latest version of an npm package:**
+
+```bash
+curl -s https://registry.npmjs.org/<pkg>/latest | jq .version
+# Or use the package manager:
+npm view <pkg> version
+```
+
+**Check peer / engine compatibility without guessing:**
+
+```bash
+npm view <pkg> peerDependencies engines
+```
+
+**Find the newest articles on a site:**
+
+```bash
+curl -s https://<site>/sitemap.xml | grep -E '<loc>|<lastmod>'
+# Sort by <lastmod> descending. For large sites, try /sitemap_index.xml first —
+# it links to per-section sitemaps via <sitemap><loc> entries.
+```
+
+**Read a feed directly:**
+
+```bash
+curl -s https://<site>/rss.xml | grep -E '<title>|<pubDate>'
+```
+
+These are the canonical primitives. See `SKILL.md` for the full procedure and the URL list for PyPI / crates.io / RubyGems / Maven / Packagist / NuGet / Go / container registries.
+
 ## Install
 
 ### Pi
 
 ```bash
-pi install git:mcwarlus/fresh-data@latest
+pi install npm:@mcwarlus/fresh-data
+# or pin to a specific git ref:
+pi install git:mcwarlus/fresh-data@<ref>
 ```
 
-Git install until the npm package ships; once published this becomes `pi install npm:@mcwarlus/fresh-data`.
+Once published, npm is the canonical install path. Git install remains available for tag pinning.
 
 Once installed:
 
@@ -84,7 +118,7 @@ Clone the repo; each harness auto-loads its file from the path below:
 ## Development
 
 ```bash
-cd pi-extension && npm test
+npm test                       # runs all 57 tests (~190ms)
 node scripts/check-rule-copies.js
 ```
 
@@ -103,6 +137,13 @@ Tests:
 
 ```bash
 npm test
+```
+
+Publishing a new version:
+
+```bash
+npm version <patch|minor|major|rc>   # bumps version in package.json
+npm publish                           # npm test + check-rules run via prepublishOnly
 ```
 
 ## License

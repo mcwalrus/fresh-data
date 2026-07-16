@@ -50,7 +50,11 @@
   ],
   "scripts": {
     "test": "node --test pi-extension/test/*.test.js scripts/test-check-rule-copies.test.js",
-    "check-rules": "node scripts/check-rule-copies.js"
+    "check-rules": "node scripts/check-rule-copies.js",
+    "prepublishOnly": "npm test && npm run check-rules"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "pi": {
     "extensions": ["./pi-extension/index.js"],

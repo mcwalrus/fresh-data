@@ -27,10 +27,10 @@ Run from the repo root. This adds `".."` to `.pi/settings.json`. `pi list` will 
 **Sub-second feedback on pure helpers (no pi session needed):**
 
 ```bash
-cd pi-extension && npm test
+npm test
 ```
 
-Runs `node --test` against `command-parser.js`, `session.js`, `install.js`, and the extension harness. ~65ms for 45 tests. Use this for parser/rule/logic changes; reach for a full `pi` session only when testing the lifecycle hooks (`session_start`, `agent_start`, `before_agent_start`, `input`) or the status indicator.
+Runs `node --test` against `command-parser.js`, `session.js`, `install.js`, the extension harness, and `scripts/test-check-rule-copies.test.js`. ~190ms for 57 tests. Use this for parser/rule/logic changes; reach for a full `pi` session only when testing the lifecycle hooks (`session_start`, `agent_start`, `before_agent_start`, `input`) or the status indicator.
 
 **Verifying a published release:**
 
@@ -47,6 +47,21 @@ The local-path and tag-pinned installs coexist cleanly in `settings.json`; remov
 - Editing files inside `.pi/git/github.com/mcwalrus/fresh-data/` directly. That cache is reconciled on `pi update` / `pi install` — edits get wiped.
 - Re-tagging for every iteration. Tags are for releases; the local-path install exists precisely so dev work doesn't need them.
 - Committing `.pi/settings.json` unless the change is genuinely shared (e.g. switching the pinned package source for a team).
+
+## Publishing
+
+The package is published to npm as `@mcwarlus/fresh-data` and consumed via `pi install npm:@mcwarlus/fresh-data`. Git tags remain the source of truth for reproducible installs (`pi install git:mcwarlus/fresh-data@<tag>`).
+
+```bash
+npm version <patch|minor|major|rc>   # bumps version in package.json + creates git tag
+npm publish                          # npm test + check-rules run via prepublishOnly
+```
+
+For RCs (`0.x.y-rc.N`), publish with `--tag next` so `latest` doesn't get pulled to non-rc users:
+
+```bash
+npm publish --tag next
+```
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:6cd5cc61 -->
 ## Beads Issue Tracker
