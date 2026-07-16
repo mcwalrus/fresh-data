@@ -8,3 +8,6 @@ ponytail/
 *.db
 .beads-credential-key
 .beads/proxieddb/
+
+# secrets
+.npmrc
